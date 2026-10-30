@@ -22,8 +22,15 @@ def known_instruction_names(name):
     return tuple(sorted(names, key=len, reverse=True))
 
 
-def program_names(root=ROOT):
-    """Use the archived mapping when present, otherwise the captured programs."""
+def program_names(root=None):
+    """Use the archived mapping when present, otherwise the captured programs.
+
+    `root` defaults to the module's ROOT as it is at call time, like the
+    other readers here, so analyze() and program_addresses() select names
+    from the same tree they read captures from.
+    """
+    if root is None:
+        root = ROOT
     path = root / 'repro/programs.json'
     if path.is_file():
         return json.loads(path.read_text())
