@@ -12,10 +12,17 @@ EXPECTED_CAPTURES=frozenset({
  'evidence/dependencies/spl_token','evidence/dependencies/spl_token_2022',
  'evidence/dependencies/token_metadata','evidence/original/mayhem','evidence/original/pump',
  'evidence/original/pump_amm','evidence/original/pump_fees'})
+# The upstream IDLs hashed in evidence/upstream/provenance.json. That file also says which
+# files to hash, so deleting an IDL together with its entry passed. Pin the set here too.
+EXPECTED_UPSTREAM=frozenset({'pump.json','pump_amm.json','pump_fees.json'})
 def sha(b): return hashlib.sha256(b).hexdigest()
 def main():
     count=0
     upstream=json.loads((ROOT/'evidence/upstream/provenance.json').read_text())
+    listed=frozenset(upstream['file_sha256'])
+    missing=sorted(EXPECTED_UPSTREAM-listed); unexpected=sorted(listed-EXPECTED_UPSTREAM)
+    assert not missing, f'upstream IDL missing from evidence/upstream/provenance.json: {missing}'
+    assert not unexpected, f'unexpected upstream file in provenance.json (not in EXPECTED_UPSTREAM): {unexpected}'
     for name,expected in upstream['file_sha256'].items():
         assert sha((ROOT/'evidence/upstream'/name).read_bytes())==expected
     for f in sorted((ROOT/'evidence').glob('**/capture.json')):
